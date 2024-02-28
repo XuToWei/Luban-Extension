@@ -63,7 +63,9 @@ public class GlobalConfigLoader : IConfigLoader
         {
             PropertyNameCaseInsensitive = true,
         };
-        var globalConf = JsonSerializer.Deserialize<LubanConf>(File.ReadAllText(fileName, Encoding.UTF8), options);
+        //Json中的字符串支持换行符 Add by XuToWei
+        var globalConf = JsonSerializer.Deserialize<LubanConf>(File.ReadAllText(fileName, Encoding.UTF8)
+            .Replace("\r\n", " ").Replace("\n", " ").Replace("\u0009", " "), options);
 
         var configFileName = Path.GetFileName(fileName);
         var dataInputDir = Path.Combine(_curDir, globalConf.DataDir);
