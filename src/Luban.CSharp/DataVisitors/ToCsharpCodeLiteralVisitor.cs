@@ -52,7 +52,7 @@ public class ToCsharpCodeLiteralVisitor : IDataFuncVisitor<string>
 
     public string Accept(DDateTime type)
     {
-        return type.UnixTimeOfCurrentContext.ToString();
+        return type.UnixTimeOfCurrentContext().ToString();
     }
 
     public string Accept(DString type)
