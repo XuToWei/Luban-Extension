@@ -62,6 +62,8 @@ public class GlobalConfigLoader : IConfigLoader
         var options = new JsonSerializerOptions
         {
             PropertyNameCaseInsensitive = true,
+            AllowTrailingCommas = true,
+            ReadCommentHandling = JsonCommentHandling.Skip,
         };
         //Json中的字符串支持换行符 Add by XuToWei
         var globalConf = JsonSerializer.Deserialize<LubanConf>(File.ReadAllText(fileName, Encoding.UTF8)

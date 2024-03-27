@@ -1,31 +1,17 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <TargetFramework>net8.0</TargetFramework>
+        <TargetFramework>net7.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
     </PropertyGroup>
 
     <ItemGroup>
       <ProjectReference Include="..\Luban.Core\Luban.Core.csproj" />
+      <ProjectReference Include="..\Luban.DataTarget.Builtin\Luban.DataTarget.Builtin.csproj" />
     </ItemGroup>
 
     <ItemGroup>
-      <None Update="Templates\cpp-rawptr-bin\bean.sbn">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Templates\cpp-rawptr-bin\schema_cpp.sbn">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Templates\cpp-rawptr-bin\schema_h.sbn">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Templates\cpp-rawptr-bin\table.sbn">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
-      <None Update="Templates\cpp-rawptr-bin\tables.sbn">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
       <None Update="Templates\cs-bin\bean.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
@@ -35,36 +21,40 @@
       <None Update="Templates\cs-bin\tables.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Templates\cs-simple-json\bean.sbn">
+      <None Update="Templates\cs-dotnet-json\bean.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Templates\cs-simple-json\table.sbn">
+      <None Update="Templates\cs-dotnet-json\table.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Templates\cs-simple-json\tables.sbn">
+      <None Update="Templates\cs-dotnet-json\tables.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
       <None Update="Templates\common\cs\enum.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Templates\cpp-sharedptr-bin\bean.sbn">
+      <None Update="Templates\common\php\enum.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Templates\cpp-sharedptr-bin\schema_cpp.sbn">
+      <None Update="Templates\ts-json\bean.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Templates\cpp-sharedptr-bin\schema_h.sbn">
+      <None Update="Templates\ts-json\table.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Templates\cpp-sharedptr-bin\table.sbn">
+      <None Update="Templates\ts-json\tables.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Templates\cpp-sharedptr-bin\tables.sbn">
+      <None Update="Templates\ts-json\schema.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
-      <None Update="Templates\common\cpp\enum.sbn">
+      <None Update="Templates\php-json\schema.sbn">
         <CopyToOutputDirectory>Always</CopyToOutputDirectory>
       </None>
+    </ItemGroup>
+
+    <ItemGroup>
+      <Folder Include="TypeVisitors\" />
     </ItemGroup>
 
 </Project>
