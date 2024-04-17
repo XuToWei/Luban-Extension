@@ -45,14 +45,15 @@ public class CsharpEditorJsonCodeTarget : CsharpCodeTargetBase
     {
         var template = GetTemplate("bean");
         var tplCtx = CreateTemplateContext(template);
+        string topModule = ctx.Target.TopModule;
         var extraEnvs = new ScriptObject
         {
             { "__ctx", ctx},
-            { "__top_module", GenerationContext.Current.TopModule },
+            { "__top_module", topModule },
             { "__name", bean.Name },
             { "__namespace", bean.Namespace },
-            { "__namespace_with_top_module", bean.NamespaceWithTopModule },
-            { "__full_name_with_top_module", bean.FullNameWithTopModule },
+            { "__namespace_with_top_module", TypeUtil.MakeFullName(topModule, bean.Namespace) },
+            { "__full_name_with_top_module", TypeUtil.MakeFullName(topModule, bean.FullName) },
             { "__bean", bean },
             { "__this", bean },
             {"__fields", bean.Fields},
@@ -68,14 +69,15 @@ public class CsharpEditorJsonCodeTarget : CsharpCodeTargetBase
     {
         var template = GetTemplate("enum");
         var tplCtx = CreateTemplateContext(template);
+        string topModule = ctx.Target.TopModule;
         var extraEnvs = new ScriptObject
         {
             { "__ctx", ctx},
             { "__name", @enum.Name },
             { "__namespace", @enum.Namespace },
-            { "__top_module", GenerationContext.Current.TopModule },
-            { "__namespace_with_top_module", @enum.NamespaceWithTopModule },
-            { "__full_name_with_top_module", @enum.FullNameWithTopModule },
+            { "__top_module", topModule },
+            { "__namespace_with_top_module", TypeUtil.MakeFullName(topModule, @enum.Namespace) },
+            { "__full_name_with_top_module", TypeUtil.MakeFullName(topModule, @enum.FullName) },
             { "__enum", @enum },
             { "__this", @enum },
             { "__code_style", CodeStyle},

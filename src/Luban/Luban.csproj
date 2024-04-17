@@ -29,8 +29,6 @@
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>disable</Nullable>
         <OutputType>Exe</OutputType>
-        <PublishAot>true</PublishAot>
-        <TrimMode>partial</TrimMode>
     </PropertyGroup>
 
     <ItemGroup>
