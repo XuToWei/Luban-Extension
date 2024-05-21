@@ -94,14 +94,14 @@ public class CsharpCodeDataTarget : DataTargetBase
         throw new Exception("template:tabledata not found");
     }
     
-    protected override string OutputFileExt => "cs";
+    protected override string DefaultOutputFileExt => "cs";
     public override OutputFile ExportTable(DefTable table, List<Record> records)
     {
         var ss = new StringBuilder();
         GenerateCodeData(table, records, ss);
         return new OutputFile()
         {
-            File = $"{table.OutputDataFile}.{OutputFileExt}",
+            File = $"{table.OutputDataFile}.{DefaultOutputFileExt}",
             Content = ss.ToString(),
         };
     }
