@@ -4,15 +4,11 @@ using Luban.CodeFormat;
 using Luban.CodeFormat.CodeStyles;
 using Luban.CodeTarget;
 using Luban.CSharp.CodeTarget;
-using Luban.CSharp.DataVisitors;
 using Luban.CSharp.TemplateExtensions;
-using Luban.CSharp.TypeVisitors;
-using Luban.Datas;
 using Luban.DataTarget;
 using Luban.Defs;
 using Luban.TemplateExtensions;
 using Luban.Tmpl;
-using Luban.Utils;
 using Scriban;
 using Scriban.Runtime;
 
@@ -21,15 +17,10 @@ namespace Luban.CSharp.DataTarget;
 [DataTarget("cs-code-data")]
 public class CsharpCodeDataTarget : DataTargetBase
 {
-    public string FileHeader => CommonFileHeaders.AUTO_GENERATE_C_LIKE;
-
-    protected string FileSuffixName => "cs";
-    protected string Name => typeof(CsharpCodeCodeTarget).GetCustomAttribute<CodeTargetAttribute>().Name;
-
     protected virtual ICodeStyle CodeStyle => _codeStyle ??= CreateConfigurableCodeStyle();
 
     private ICodeStyle _codeStyle;
-    
+
     private ICodeStyle CreateConfigurableCodeStyle()
     {
         var baseStyle = GenerationContext.Current.GetCodeStyle(Name) ?? CodeFormatManager.Ins.CsharpDefaultCodeStyle;
@@ -85,7 +76,7 @@ public class CsharpCodeDataTarget : DataTargetBase
         result.Append(template.Render(tplCtx));
     }
     
-    protected virtual Scriban.Template GetTemplate()
+    protected virtual Template GetTemplate()
     {
         if (TemplateManager.Ins.TryGetTemplate($"{typeof(CsharpCodeCodeTarget).GetCustomAttribute<CodeTargetAttribute>().Name}/tabledata", out var template))
         {
