@@ -99,7 +99,7 @@ public class XmlSchemaLoader : SchemaLoaderBase
                     XmlSchemaUtil.ValidAttrKeys(_fileName, item, _enumItemOptionalAttrs, _enumItemRequiredAttrs);
                     en.Items.Add(new EnumItem()
                     {
-                        Name = XmlUtil.GetRequiredAttribute(item, "name"),
+                        Name = XmlUtil.GetRequiredAttribute(item, "name").Trim(),
                         Alias = XmlUtil.GetOptionalAttribute(item, "alias"),
                         Value = XmlUtil.GetOptionalAttribute(item, "value"),
                         Comment = XmlUtil.GetOptionalAttribute(item, "comment"),
@@ -132,6 +132,10 @@ public class XmlSchemaLoader : SchemaLoaderBase
         string module = CurNamespace;
         string valueType = XmlUtil.GetRequiredAttribute(e, "value");
         bool defineFromFile = XmlUtil.GetOptionBoolAttribute(e, "readSchemaFromFile");
+        if (string.IsNullOrEmpty(TypeUtil.GetNamespace(valueType)))
+        {
+            valueType = TypeUtil.MakeFullName(module, valueType);
+        }
         string index = XmlUtil.GetOptionalAttribute(e, "index");
         string group = XmlUtil.GetOptionalAttribute(e, "group");
         string comment = XmlUtil.GetOptionalAttribute(e, "comment");

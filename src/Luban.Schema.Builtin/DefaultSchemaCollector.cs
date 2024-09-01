@@ -21,6 +21,7 @@ public class DefaultSchemaCollector : SchemaCollectorBase
             schemaLoader.Load(importFile.FileName);
         }
 
+        LoadTablesFromTableImporter();
         LoadTableValueTypeSchemasFromFile();
     }
 
@@ -40,11 +41,25 @@ public class DefaultSchemaCollector : SchemaCollectorBase
                 string fileName = table.InputFiles[0];
                 IBeanSchemaLoader schemaLoader = SchemaManager.Ins.CreateBeanSchemaLoader(beanSchemaLoaderName);
                 string fullPath = $"{GenerationContext.GetInputDataPath()}/{fileName}";
-                RawBean bean = schemaLoader.Load(fullPath, table.ValueType);
+                RawBean bean = schemaLoader.Load(fullPath, table.ValueType, table);
                 bean.Groups = new List<string>(table.Groups);
                 Add(bean);
             }));
         }
         Task.WaitAll(tasks.ToArray());
+    }
+
+    private void LoadTablesFromTableImporter()
+    {
+        string tableImporterName = EnvManager.Current.GetOptionOrDefault("tableImporter", "name", false, "default");
+        if (string.IsNullOrWhiteSpace(tableImporterName) || tableImporterName == "none")
+        {
+            return;
+        }
+        ITableImporter tableImporter = SchemaManager.Ins.CreateTableImporter(tableImporterName);
+        foreach (var table in tableImporter.LoadImportTables())
+        {
+            Add(table);
+        }
     }
 }

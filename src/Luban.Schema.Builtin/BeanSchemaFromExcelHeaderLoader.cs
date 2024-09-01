@@ -1,4 +1,5 @@
 using Luban.DataLoader.Builtin.Excel;
+using Luban.Defs;
 using Luban.RawDefs;
 using Luban.Utils;
 
@@ -7,12 +8,12 @@ namespace Luban.Schema.Builtin;
 [BeanSchemaLoader("default")]
 public class BeanSchemaFromExcelHeaderLoader : IBeanSchemaLoader
 {
-    public RawBean Load(string fileName, string beanFullName)
+    public RawBean Load(string fileName, string beanFullName, RawTable table)
     {
-        return LoadTableValueTypeDefineFromFile(fileName, beanFullName);
+        return LoadTableValueTypeDefineFromFile(fileName, beanFullName, table);
     }
 
-    public static RawBean LoadTableValueTypeDefineFromFile(string fileName, string valueTypeFullName)
+    public static RawBean LoadTableValueTypeDefineFromFile(string fileName, string valueTypeFullName, RawTable table)
     {
         var valueTypeNamespace = TypeUtil.GetNamespace(valueTypeFullName);
         string valueTypeName = TypeUtil.GetName(valueTypeFullName);
@@ -26,8 +27,33 @@ public class BeanSchemaFromExcelHeaderLoader : IBeanSchemaLoader
             Fields = new(),
         };
 
+
         (var actualFile, var sheetName) = FileUtil.SplitFileAndSheetName(FileUtil.Standardize(fileName));
+
+        if (!File.Exists(actualFile))
+        {
+            if (Directory.Exists(fileName))
+            {
+                var files = FileUtil.GetFileOrDirectory(fileName);
+                var firstExcelFile = files.FirstOrDefault(f => FileUtil.IsExcelFile(f));
+                if (firstExcelFile == null)
+                {
+                    throw new Exception($"table: '{table.Name}' valueType:'{valueTypeFullName}' directory:'{fileName}', 当table的ReadSchemaFromFile为true时，目录下必须有excel文件");
+                }
+                actualFile = firstExcelFile;
+            }
+            else
+            {
+                throw new Exception($"table '{table.Name}' intput path:'{fileName}' not found");
+            }
+        }
+        else if (!FileUtil.IsExcelFile(actualFile))
+        {
+            throw new Exception($"table: '{table.Name}' valueType:'{valueTypeFullName}' file:'{fileName}'，当table的ReadSchemaFromFile为true时，文件必须是excel文件");
+        }
+
         using var inputStream = new FileStream(actualFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+
         var tableDefInfo = SheetLoadUtil.LoadSheetTableDefInfo(actualFile, sheetName, inputStream);
 
         foreach (var (name, f) in tableDefInfo.FieldInfos)

@@ -25,7 +25,7 @@ public class SchemaManager
 
     public void Init()
     {
-
+        _schemaLoaders.Clear();
     }
 
     public void ScanRegisterAll(Assembly assembly)
@@ -86,5 +86,10 @@ public class SchemaManager
     public IBeanSchemaLoader CreateBeanSchemaLoader(string type)
     {
         return CustomBehaviourManager.Ins.CreateBehaviour<IBeanSchemaLoader, BeanSchemaLoaderAttribute>(type);
+    }
+
+    public ITableImporter CreateTableImporter(string type)
+    {
+        return CustomBehaviourManager.Ins.CreateBehaviour<ITableImporter, TableImporterAttribute>(type);
     }
 }

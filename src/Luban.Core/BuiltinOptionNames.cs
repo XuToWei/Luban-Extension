@@ -10,7 +10,7 @@ public static class BuiltinOptionNames
 
     public const string OutputCodeExtension = "outputCodeExtension";
 
-    public const string OutputDataExtension = "outputDataExtension";
+    public const string OutputDataExtension = "fileExt";
 
     public const string CodeStyle = "codeStyle";
 
@@ -53,4 +53,6 @@ public static class BuiltinOptionNames
     public const string NamingConvention = "namingConvention";
 
     public const string LineEnding = "lineEnding";
+
+    public const string FileEncoding = "fileEncoding";
 }
