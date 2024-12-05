@@ -1,3 +1,6 @@
+# cs-code模式使用说明
+![87f2c95196a627372450d4b3b4ccd7f2](https://github.com/user-attachments/assets/3a0af29a-0e29-48bf-849c-d7c6168545f5)
+![b0fd9685dc38337b966f76706998102f](https://github.com/user-attachments/assets/55910f7a-01d0-4adf-b80b-da320653c6b6)
 
 - [README 中文](./README.md)
 - [README English](./README_EN.md)
