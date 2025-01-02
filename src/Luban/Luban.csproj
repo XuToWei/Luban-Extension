@@ -33,8 +33,14 @@
         <PackageReadmeFile>README.md</PackageReadmeFile>
         <PackAsTool>True</PackAsTool>
         <FileVersion>$(AssemblyVersion)</FileVersion>
-        <Version>3.10.0</Version>
+        <Version>3.11.0</Version>
     </PropertyGroup>
+
+    <ItemGroup>
+      <Compile Remove="Plugin\**" />
+      <EmbeddedResource Remove="Plugin\**" />
+      <None Remove="Plugin\**" />
+    </ItemGroup>
 
     <ItemGroup>
       <PackageReference Include="CommandLineParser" Version="2.9.1" />
@@ -62,10 +68,6 @@
       <ProjectReference Include="..\Luban.Rust\Luban.Rust.csproj" />
       <ProjectReference Include="..\Luban.Schema.Builtin\Luban.Schema.Builtin.csproj" />
       <ProjectReference Include="..\Luban.Typescript\Luban.Typescript.csproj" />
-    </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Plugin\" />
     </ItemGroup>
 
     <ItemGroup>
