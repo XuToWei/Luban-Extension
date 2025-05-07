@@ -3,7 +3,7 @@ using Luban.DataLoader.Builtin.Utils;
 
 namespace Luban.DataLoader.Builtin.Excel;
 
-class ExcelStream
+public class ExcelStream
 {
 
     private readonly List<Cell> _datas;
@@ -190,7 +190,7 @@ class ExcelStream
         return false;
     }
 
-    public bool TryPeed(out object data)
+    public bool TryPeek(out object data)
     {
         int oldCurIndex = _curIndex;
         if (TryRead(out data))
@@ -260,7 +260,7 @@ class ExcelStream
 
     private bool IsSkip(object x)
     {
-        return x == null || (x is string s && string.IsNullOrEmpty(s));
+        return x == null || (x is string s && string.IsNullOrWhiteSpace(s));
     }
 
     public bool TryReadEOF()
