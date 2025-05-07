@@ -9,16 +9,56 @@ using Luban.Utils;
 
 namespace Luban.CSharp.DataVisitors;
 
-public class ToCsharpCodeLiteralVisitor : ToLiteralVisitorBase
+public class ToCsharpCodeLiteralVisitor : IDataFuncVisitor<string>
 {
     public static ToCsharpCodeLiteralVisitor Ins { get; } = new();
 
-    public override string Accept(DString type)
+    public string Accept(DBool type)
+    {
+        return type.Value ? "true" : "false";
+    }
+
+    public string Accept(DByte type)
+    {
+        return type.Value.ToString();
+    }
+
+    public string Accept(DShort type)
+    {
+        return type.Value.ToString();
+    }
+
+    public string Accept(DInt type)
+    {
+        return type.Value.ToString();
+    }
+
+    public string Accept(DLong type)
+    {
+        return type.Value.ToString();
+    }
+
+    public string Accept(DFloat type)
+    {
+        return $"{type.Value}f";
+    }
+
+    public string Accept(DDouble type)
+    {
+        return type.Value.ToString();
+    }
+
+    public string Accept(DDateTime type)
+    {
+        return type.UnixTimeOfCurrentContext().ToString();
+    }
+
+    public string Accept(DString type)
     {
         return $"@\"{type.Value}\"";
     }
 
-    public override string Accept(DBean type)
+    public string Accept(DBean type)
     {
         var x = new StringBuilder();
         x.Append($"new {type.ImplType.FullNameWithTopModule} (");
@@ -58,7 +98,7 @@ public class ToCsharpCodeLiteralVisitor : ToLiteralVisitorBase
         x.Append('}');
     }
 
-    public override string Accept(DArray type)
+    public string Accept(DArray type)
     {
         var x = new StringBuilder();
         x.Append($"new {type.Type.Apply(UnderlyingDeclaringTypeNameVisitor.Ins)} ");
@@ -66,7 +106,7 @@ public class ToCsharpCodeLiteralVisitor : ToLiteralVisitorBase
         return x.ToString();
     }
 
-    public override string Accept(DList type)
+    public string Accept(DList type)
     {
         var x = new StringBuilder();
         x.Append($"new {type.Type.Apply(UnderlyingDeclaringTypeNameVisitor.Ins)} ");
@@ -74,7 +114,7 @@ public class ToCsharpCodeLiteralVisitor : ToLiteralVisitorBase
         return x.ToString();
     }
 
-    public override string Accept(DSet type)
+    public string Accept(DSet type)
     {
         var x = new StringBuilder();
         x.Append($"new {type.Type.Apply(UnderlyingDeclaringTypeNameVisitor.Ins)} ");
@@ -82,7 +122,7 @@ public class ToCsharpCodeLiteralVisitor : ToLiteralVisitorBase
         return x.ToString();
     }
 
-    public override string Accept(DMap type)
+    public string Accept(DMap type)
     {
         var x = new StringBuilder();
         x.Append($"new {type.Type.Apply(UnderlyingDeclaringTypeNameVisitor.Ins)} {{ ");
@@ -94,7 +134,7 @@ public class ToCsharpCodeLiteralVisitor : ToLiteralVisitorBase
         return x.ToString();
     }
 
-    public override string Accept(DEnum type)
+    public string Accept(DEnum type)
     {
         if (string.IsNullOrEmpty(type.StrValue) || string.Equals(type.StrValue, "0"))
             return "default";
