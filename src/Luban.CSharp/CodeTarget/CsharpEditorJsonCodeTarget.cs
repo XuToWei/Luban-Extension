@@ -14,7 +14,7 @@ public class CsharpEditorJsonCodeTarget : CsharpCodeTargetBase
     {
         var tasks = new List<Task<OutputFile>>();
 
-        foreach (var bean in ctx.Assembly.TypeList.OfType<DefBean>())
+        foreach (var bean in ctx.ExportBeans)
         {
             tasks.Add(Task.Run(() =>
             {
@@ -24,7 +24,7 @@ public class CsharpEditorJsonCodeTarget : CsharpCodeTargetBase
             }));
         }
 
-        foreach (var @enum in ctx.Assembly.TypeList.OfType<DefEnum>())
+        foreach (var @enum in ctx.ExportEnums)
         {
             tasks.Add(Task.Run(() =>
             {
