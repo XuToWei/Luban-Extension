@@ -30,7 +30,7 @@ public class GoCommonTemplateExtension : ScriptObject
 {
     public static string FullName(DefTypeBase bean)
     {
-        return TypeUtil.MakeGoFullName(bean.Namespace, bean.Name);
+        return bean.GoFullName;
     }
     public static string FullNameLowerCase(DefTypeBase bean)
     {

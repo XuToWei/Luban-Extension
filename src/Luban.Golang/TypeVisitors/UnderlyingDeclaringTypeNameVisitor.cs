@@ -21,7 +21,6 @@
 using Luban.Golang.TemplateExtensions;
 using Luban.Types;
 using Luban.TypeVisitors;
-using Luban.Utils;
 
 namespace Luban.Golang.TypeVisitors;
 
@@ -66,7 +65,7 @@ public class UnderlyingDeclaringTypeNameVisitor : ITypeFuncVisitor<string>
 
     public string Accept(TEnum type)
     {
-        return "int32";
+        return GoCommonTemplateExtension.FullName(type.DefEnum);
     }
 
     public string Accept(TString type)

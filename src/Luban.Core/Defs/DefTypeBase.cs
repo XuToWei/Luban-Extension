@@ -34,6 +34,8 @@ public abstract class DefTypeBase
 
     public string FullName => TypeUtil.MakeFullName(Namespace, Name);
 
+    public string GoFullName => TypeUtil.MakeGoFullName(Namespace, Name);
+
     public string NamespaceWithTopModule => TypeUtil.MakeNamespace(GenerationContext.Current.TopModule, Namespace);
 
     public string FullNameWithTopModule => TypeUtil.MakeNamespace(GenerationContext.Current.TopModule, FullName);
