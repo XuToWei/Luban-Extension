@@ -250,12 +250,30 @@ public static class FileUtil
     {
         baseDir = Path.GetFullPath(baseDir.Replace('\\', '/'));
         file = Path.GetFullPath(file.Replace('\\', '/'));
-        // if baseDir contains '.' or '_', we shouldn't ignore it.
-        if (file.Length > baseDir.Length && file.StartsWith(baseDir) && (file[baseDir.Length] == '\\' || file[baseDir.Length] == '/'))
+
+        // find common parent directory,
+        var baseDirParts = baseDir.Split('\\', '/');
+        var fileParts = file.Split('\\', '/');
+
+        int maxCommonLength = Math.Min(baseDirParts.Length, fileParts.Length);
+        int firstDiffIndex = maxCommonLength;
+        for (int i = 0; i < maxCommonLength; i++)
         {
-            file = file[(baseDir.Length + 1)..];
+            if (!baseDirParts[i].Equals(fileParts[i], StringComparison.OrdinalIgnoreCase))
+            {
+                firstDiffIndex = i;
+                break;
+            }
         }
-        return file.Split('\\', '/').Any(fileName => fileName.StartsWith(".") || fileName.StartsWith("_") || fileName.StartsWith("~"));
+        for (int i = firstDiffIndex; i < fileParts.Length; i++)
+        {
+            string part = fileParts[i];
+            if (part.StartsWith(".") || part.StartsWith("_") || part.StartsWith("~"))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static List<string> GetFileOrDirectory(string baseDir, string fileOrDirectory)
