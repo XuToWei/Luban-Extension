@@ -18,32 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using ExcelDataReader;
+using Luban.DataLoader.Builtin.DataVisitors;
+
 namespace Luban.DataLoader.Builtin.Excel;
 
-public struct Cell
+public class InvalidExcelValue
 {
-    public Cell(int row, int column, object value)
+    public int RowIndex { get; }
+
+    public int ColumnIndex { get; }
+
+    public CellError CellError { get; }
+
+    public InvalidExcelValue(int rowIndex, int columnIndex, CellError cellError)
     {
-        this.Row = row;
-        this.Column = column;
-        this.Value = value;
-    }
-    public int Row { get; } // 从 1 开始
-
-    public int Column { get; } // 从 0 开始，考虑改了它？
-
-    public object Value { get; }
-
-
-    public static string ToAlphaString(int column)
-    {
-        int h = column / 26;
-        int n = column % 26;
-        return $"{(h > 0 ? ((char)('A' + h - 1)).ToString() : "")}{(char)('A' + n)}";
+        RowIndex = rowIndex;
+        ColumnIndex = columnIndex;
+        CellError = cellError;
     }
 
     public override string ToString()
     {
-        return $"[{ToAlphaString(Column)}{Row + 1}] {Value}";
+        throw new InvalidExcelDataException($"Invalid Excel Value at: [{Cell.ToAlphaString(ColumnIndex)}{RowIndex + 1}], Error: {CellError}");
     }
 }

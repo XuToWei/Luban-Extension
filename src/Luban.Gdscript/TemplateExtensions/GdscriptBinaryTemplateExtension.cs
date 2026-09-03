@@ -18,32 +18,28 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace Luban.DataLoader.Builtin.Excel;
+using Luban.Gdscript.TypeVisitors;
+using Luban.Types;
+using Scriban.Runtime;
 
-public struct Cell
+namespace Luban.Gdscript.TemplateExtensions;
+
+public class GdscriptBinaryTemplateExtension : ScriptObject
 {
-    public Cell(int row, int column, object value)
+    public static string Deserialize(string fieldName, string bufName, TType type, string eleTypeVarName = "", string eleTypeVarName2 = "")
     {
-        this.Row = row;
-        this.Column = column;
-        this.Value = value;
-    }
-    public int Row { get; } // 从 1 开始
-
-    public int Column { get; } // 从 0 开始，考虑改了它？
-
-    public object Value { get; }
-
-
-    public static string ToAlphaString(int column)
-    {
-        int h = column / 26;
-        int n = column % 26;
-        return $"{(h > 0 ? ((char)('A' + h - 1)).ToString() : "")}{(char)('A' + n)}";
+        if (type.IsNullable)
+        {
+            return $"if LubanUtil.read_bool({bufName}): {type.Apply(BinaryUnderlyingDeserializeVisitor.Ins, bufName, fieldName, eleTypeVarName, eleTypeVarName2)}";
+        }
+        else
+        {
+            return type.Apply(BinaryUnderlyingDeserializeVisitor.Ins, bufName, fieldName, eleTypeVarName,  eleTypeVarName2);
+        }
     }
 
-    public override string ToString()
+    public static string EleType(string eleTypeVarName, TType eleTType)
     {
-        return $"[{ToAlphaString(Column)}{Row + 1}] {Value}";
+        return $"var {eleTypeVarName} = {eleTType.Apply(BinaryUnderlyingEleTypeVisitor.Ins)}";
     }
 }

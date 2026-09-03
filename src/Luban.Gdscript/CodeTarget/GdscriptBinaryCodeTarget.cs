@@ -18,32 +18,18 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
-namespace Luban.DataLoader.Builtin.Excel;
+using Luban.CodeTarget;
+using Luban.Gdscript.TemplateExtensions;
+using Scriban;
 
-public struct Cell
+namespace Luban.Gdscript.CodeTarget;
+
+[CodeTarget("gdscript-bin")]
+public class GdscriptBinaryCodeTarget : GdscriptCodeTargetBase
 {
-    public Cell(int row, int column, object value)
+    protected override void OnCreateTemplateContext(TemplateContext ctx)
     {
-        this.Row = row;
-        this.Column = column;
-        this.Value = value;
-    }
-    public int Row { get; } // 从 1 开始
-
-    public int Column { get; } // 从 0 开始，考虑改了它？
-
-    public object Value { get; }
-
-
-    public static string ToAlphaString(int column)
-    {
-        int h = column / 26;
-        int n = column % 26;
-        return $"{(h > 0 ? ((char)('A' + h - 1)).ToString() : "")}{(char)('A' + n)}";
-    }
-
-    public override string ToString()
-    {
-        return $"[{ToAlphaString(Column)}{Row + 1}] {Value}";
+        base.OnCreateTemplateContext(ctx);
+        ctx.PushGlobal(new GdscriptBinaryTemplateExtension());
     }
 }

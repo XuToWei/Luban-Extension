@@ -64,7 +64,7 @@ public class LuaCommentTypeVisitor : ITypeFuncVisitor<string>
 
     public string Accept(TEnum type)
     {
-        return "integer";
+        return type.DefEnum.FullName;
     }
 
     public string Accept(TString type)
