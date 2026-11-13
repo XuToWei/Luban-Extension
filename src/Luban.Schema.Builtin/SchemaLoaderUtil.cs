@@ -19,7 +19,9 @@
 // SOFTWARE.
 
 using Luban.Defs;
+using Luban.Diagnostics;
 using Luban.RawDefs;
+using Luban.Schema;
 using Luban.Utils;
 
 namespace Luban.Schema.Builtin;
@@ -32,10 +34,12 @@ public static class SchemaLoaderUtil
     }
 
     public static RawTable CreateTable(string schemaFile, string name, string module, string valueType, string index, string mode, string group,
-        string comment, bool readSchemaFromFile, string input, string tags, string outputFileName)
+        string comment, bool readSchemaFromFile, string input, string tags, string outputFileName, string variant = null)
     {
+        var source = SchemaSource.FromPath(schemaFile);
         var p = new RawTable()
         {
+            Source = source,
             Name = name,
             Namespace = module,
             ValueType = valueType,
@@ -46,14 +50,15 @@ public static class SchemaLoaderUtil
             Mode = ConvertMode(schemaFile, name, mode, index),
             Tags = DefUtil.ParseAttrs(tags),
             OutputFile = outputFileName,
+            Variants = DefUtil.ParseVariant(variant ?? ""),
         };
         if (string.IsNullOrWhiteSpace(name))
         {
-            throw new Exception($"定义文件:{schemaFile} table:'{p.Name}' name:'{p.Name}' 不能为空");
+            throw new LubanException(source, "error.schema.table_empty_name", source?.Display ?? schemaFile, p.Name);
         }
         if (string.IsNullOrWhiteSpace(valueType))
         {
-            throw new Exception($"定义文件:{schemaFile} table:'{p.Name}' value_type:'{valueType}' 不能为空");
+            throw new LubanException(source, "error.schema.table_empty_value_type", source?.Display ?? schemaFile, p.Name, valueType);
         }
         p.InputFiles.AddRange(input.Split(',').Select(s => s.Trim()).Where(s => !string.IsNullOrWhiteSpace(s)));
 
@@ -79,6 +84,7 @@ public static class SchemaLoaderUtil
 
     public static TableMode ConvertMode(string schemaFile, string tableName, string modeStr, string indexStr)
     {
+        var source = SchemaSource.FromPath(schemaFile);
         TableMode mode;
         string[] indexs = indexStr.Split(',', '+');
         switch (modeStr)
@@ -89,7 +95,7 @@ public static class SchemaLoaderUtil
             {
                 if (!string.IsNullOrWhiteSpace(indexStr))
                 {
-                    throw new Exception($"定义文件:{schemaFile} table:'{tableName}' mode={modeStr} 是单例表，不支持定义index属性");
+                    throw new LubanException(source, "error.schema.singleton_index", source?.Display ?? schemaFile, tableName, modeStr);
                 }
                 mode = TableMode.ONE;
                 break;
@@ -98,7 +104,7 @@ public static class SchemaLoaderUtil
             {
                 if (!string.IsNullOrWhiteSpace(indexStr) && indexs.Length > 1)
                 {
-                    throw new Exception($"定义文件:'{schemaFile}' table:'{tableName}' 是单主键表，index:'{indexStr}'不能包含多个key");
+                    throw new LubanException(source, "error.schema.map_multi_index", source?.Display ?? schemaFile, tableName, indexStr);
                 }
                 mode = TableMode.MAP;
                 break;

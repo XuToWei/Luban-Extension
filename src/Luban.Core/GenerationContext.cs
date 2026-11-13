@@ -18,12 +18,14 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using Luban.Diagnostics;
 using Luban.CodeFormat;
 using Luban.CodeTarget;
 using Luban.DataLoader;
 using Luban.Datas;
 using Luban.Defs;
 using Luban.L10N;
+using Luban.Pipeline;
 using Luban.RawDefs;
 using Luban.Schema;
 using Luban.Types;
@@ -50,11 +52,19 @@ public class GenerationContext
 {
     private static readonly NLog.Logger s_logger = NLog.LogManager.GetCurrentClassLogger();
 
-    public static GenerationContext Current { get; private set; }
+    public static GenerationContext Current => PipelineScope.Current.GenerationContext;
 
-    public static ICodeTarget CurrentCodeTarget { get; set; }
+    public static ICodeTarget CurrentCodeTarget
+    {
+        get => PipelineScope.Current.CurrentCodeTarget;
+        set => PipelineScope.Current.CurrentCodeTarget = value;
+    }
 
-    public static LubanConfig GlobalConf { get; set; }
+    public static LubanConfig GlobalConf
+    {
+        get => PipelineScope.Current.Config;
+        set => PipelineScope.Current.Config = value;
+    }
 
     public DefAssembly Assembly { get; private set; }
 
@@ -98,7 +108,7 @@ public class GenerationContext
 
     public GenerationContext()
     {
-        Current = this;
+        PipelineScope.Current.GenerationContext = this;
     }
 
     public void Init(GenerationContextBuilder builder)
@@ -108,7 +118,7 @@ public class GenerationContext
         ExcludeTags = builder.ExcludeTags;
         if (IncludeTags != null && IncludeTags.Count != 0 && ExcludeTags != null && ExcludeTags.Count > 0)
         {
-            throw new Exception("option '--includeTag <tag>' and '--excludeTag <tag>' can not be set at the same time");
+            throw new LubanException("error.cli.include_exclude_tag_conflict");
         }
         TimeZone = TimeZoneUtil.GetTimeZone(builder.TimeZone);
         _exportEmptyGroupsTypes = builder.Assembly.Target.Groups.Any(g => GlobalConf.Groups.FirstOrDefault(gd => gd.Names.Contains(g))?.IsDefault == true);

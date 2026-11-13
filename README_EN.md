@@ -1,13 +1,10 @@
-
-- [README 中文](./README.md)
-- [README English](./README_EN.md)
-
 # Luban
 
 ![icon](docs/images/logo.png)
 
 [![license](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)](https://opensource.org/licenses/MIT) ![star](https://img.shields.io/github/stars/focus-creative-games/luban?style=flat-square)
 
+[中文](./README.md) | **English**
 
 luban is a powerful, easy-to-use, elegant, and stable game configuration solution. It is designed to meet the needs of simple to complex game configuration workflows from small to very large game projects.
 
@@ -16,9 +13,11 @@ Luban has a clear and elegant generation pipeline design, supports good modulari
 
 Luban standardizes the game configuration development workflow, which can greatly improve the efficiency of planning and programming.
 
+Since **5.0.0**, Luban is **AI Native**: official Agent Skills, machine-readable schema and diagnostics, `Luban.Agent` CLI, and an MCP Server—so agents can reliably add tables, inspect schema, validate, and generate.
+
 ## Core features
 
-- Rich source data format. Support excel family (csv, xls, xlsx, xlsm), json, xml, yaml, lua, etc.
+- Rich source data format. Support excel family (csv, tsv, xls, xlsx, xlsm), json, xml, yaml, lua, etc.
 - Rich export formats. Support generating binary, json, bson, xml, lua, yaml and other format data
 - Enhanced excel format. Simple configurations such as simple lists, substructures, structured lists, and arbitrarily complex deep nested structures can be concisely configured
 - Complete type system. Not only can it express common specification line lists, but it can flexibly and elegantly express complex GamePlay data such as behavior trees, skills, plots, and dungeons because **supports OOP type inheritance**
@@ -26,6 +25,7 @@ Luban standardizes the game configuration development workflow, which can greatl
 - Support popular message schemes. protobuf(schema + binary + json), flatbuffers(schema + json), msgpack(binary)
 - Powerful data verification capability. ref reference check, path resource path, range range check, etc.
 - Perfect localization support
+- **AI Native (5.0.0+)**. Official Agent Skills, `-c schema-json`, `--errorFormat json`, `Luban.Agent` (validate / list / describe), and `Luban.Mcp` (IDE tool calling)
 - Supports all major game engines and platforms. Support Unity, Unreal, Cocos2x, Godot, WeChat games, etc.
 - Good cross-platform capability. It can run well on Win, Linux, and Mac platforms.
 - Support all mainstream hot update solutions. hybridclr, ilruntime, {x,t,s}lua, puerts, etc.
@@ -49,7 +49,23 @@ Build outputs are written to `src/Luban/bin/Release/net10.0/` and require the .N
 
 - [Official Documentation](https://www.datable.cn/en/docs/intro)
 - [Quick Start](https://www.datable.cn/en/docs/guide/install)
+- [AI support (Skills / Agent / MCP / schema-json)](https://www.datable.cn/docs/ai/overview)
+- [What's new in 5.x (vs 4.x)](https://www.datable.cn/docs/other/whats-new-5.x)
 - **Example Project** ([github](https://github.com/focus-creative-games/luban_examples)) ([gitee](https://gitee.com/focus-creative-games/luban_examples))
+
+AI assets in this repo: [`ai/`](./ai/README.md).
+
+## Developers: running tests
+
+In-repo xUnit integration tests (no dependency on external `luban_examples`):
+
+```bash
+dotnet test src/Luban.Tests/Luban.Tests.csproj
+```
+
+- Fixtures and expected outputs: `tests/fixtures/`, `tests/golden/`
+- Refresh goldens after export changes: `pwsh tests/scripts/update-goldens.ps1` or `bash tests/scripts/update-goldens.sh`
+- Or set `LUBAN_UPDATE_GOLDEN=1` while running tests to rewrite goldens in place
 
 ## Support and contact
 

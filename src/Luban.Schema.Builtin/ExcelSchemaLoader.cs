@@ -19,17 +19,20 @@
 // SOFTWARE.
 
 using Luban.DataLoader;
+using Luban.DataLoader.Builtin.Excel;
 using Luban.Datas;
 using Luban.Defs;
+using Luban.Diagnostics;
 using Luban.RawDefs;
+using Luban.Schema;
 using Luban.Types;
 using Luban.Utils;
 
 namespace Luban.Schema.Builtin;
 
-[SchemaLoader("table", "xlsx", "xls", "xlsm", "csv")]
-[SchemaLoader("bean", "xlsx", "xls", "xlsm", "csv")]
-[SchemaLoader("enum", "xlsx", "xls", "xlsm", "csv")]
+[SchemaLoader("table", "xlsx", "xls", "xlsm", "csv", "tsv")]
+[SchemaLoader("bean", "xlsx", "xls", "xlsm", "csv", "tsv")]
+[SchemaLoader("enum", "xlsx", "xls", "xlsm", "csv", "tsv")]
 public class ExcelSchemaLoader : SchemaLoaderBase
 {
     private static readonly NLog.Logger s_logger = NLog.LogManager.GetCurrentClassLogger();
@@ -48,13 +51,34 @@ public class ExcelSchemaLoader : SchemaLoaderBase
                 LoadEnumListFromFile(fileName);
                 break;
             default:
-                throw new Exception($"unknown type:{Type}");
+                throw new LubanException("error.schema.unknown_excel_type", Type);
         }
     }
 
 
     private void LoadTableListFromFile(string fileName)
     {
+        (var actualFile, var sheetName) = FileUtil.SplitFileAndSheetName(FileUtil.Standardize(fileName));
+        bool hasVariantColumn = ExcelSheetHasColumn(actualFile, sheetName, "variant");
+
+        var fields = new List<RawField>
+        {
+            new() { Name = "full_name", Type = "string" },
+            new() { Name = "value_type", Type = "string" },
+            new() { Name = "index", Type = "string" },
+            new() { Name = "mode", Type = "string" },
+            new() { Name = "group", Type = "string" },
+            new() { Name = "comment", Type = "string" },
+            new() { Name = "read_schema_from_file", Type = "bool" },
+            new() { Name = "input", Type = "string" },
+            new() { Name = "output", Type = "string" },
+            new() { Name = "tags", Type = "string" },
+        };
+        if (hasVariantColumn)
+        {
+            fields.Add(new() { Name = "variant", Type = "string" });
+        }
+
         var defTableRecordType = new DefBean(new RawBean()
         {
             Namespace = "__intern__",
@@ -63,19 +87,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             Alias = "",
             IsValueType = false,
             Sep = "",
-            Fields = new List<RawField>
-            {
-                new() { Name = "full_name", Type = "string" },
-                new() { Name = "value_type", Type = "string" },
-                new() { Name = "index", Type = "string" },
-                new() { Name = "mode", Type = "string" },
-                new() { Name = "group", Type = "string" },
-                new() { Name = "comment", Type = "string" },
-                new() { Name = "read_schema_from_file", Type = "bool" },
-                new() { Name = "input", Type = "string" },
-                new() { Name = "output", Type = "string" },
-                new() { Name = "tags", Type = "string" },
-            }
+            Fields = fields,
         })
         {
             Assembly = new DefAssembly(new RawAssembly()
@@ -88,7 +100,6 @@ public class ExcelSchemaLoader : SchemaLoaderBase
         defTableRecordType.PostCompile();
         var tableRecordType = TBean.Create(false, defTableRecordType, null);
 
-        (var actualFile, var sheetName) = FileUtil.SplitFileAndSheetName(FileUtil.Standardize(fileName));
         var records = DataLoaderManager.Ins.LoadTableFile(tableRecordType, actualFile, sheetName, new Dictionary<string, string>());
         foreach (var r in records)
         {
@@ -98,7 +109,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             string name = TypeUtil.GetName(fullName);
             if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(name))
             {
-                throw new Exception($"file:{actualFile} 定义了一个空的table类名");
+                throw new LubanException("error.schema.empty_table_name", actualFile);
             }
             string module = TypeUtil.GetNamespace(fullName);
             string valueType = (data.GetField("value_type") as DString).Value.Trim();
@@ -115,11 +126,22 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             // string patchInput = (data.GetField("patch_input") as DString).Value.Trim();
             string tags = (data.GetField("tags") as DString).Value.Trim();
             string outputFile = (data.GetField("output") as DString).Value.Trim();
+            string variant = hasVariantColumn ? ((data.GetField("variant") as DString)?.Value?.Trim() ?? "") : "";
             // string options = (data.GetField("options") as DString).Value.Trim(); 
-            var table = SchemaLoaderUtil.CreateTable(fileName, name, module, valueType, index, mode, group, comment, readSchemaFromFile, inputFile, tags, outputFile);
+            var table = SchemaLoaderUtil.CreateTable(fileName, name, module, valueType, index, mode, group, comment, readSchemaFromFile, inputFile, tags, outputFile, variant);
             Collector.Add(table);
         }
         ;
+    }
+
+    private static bool ExcelSheetHasColumn(string actualFile, string sheetName, string columnName)
+    {
+        using var fs = new FileStream(actualFile, FileMode.Open, FileAccess.Read, FileShare.ReadWrite);
+        foreach (var sheet in SheetLoadUtil.LoadRawSheets(actualFile, sheetName, fs))
+        {
+            return sheet.Title != null && sheet.Title.SubTitles.ContainsKey(columnName);
+        }
+        return false;
     }
 
     private void LoadEnumListFromFile(string fileName)
@@ -193,7 +215,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             string name = TypeUtil.GetName(fullName);
             if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(name))
             {
-                throw new Exception($"file:{fileName} 定义了一个空的enum类名");
+                throw new LubanException("error.schema.empty_enum_name", fileName);
             }
             string module = TypeUtil.GetNamespace(fullName);
 
@@ -201,6 +223,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
 
             var curEnum = new RawEnum()
             {
+                Source = SchemaSource.FromPath(fileName),
                 Name = name,
                 Namespace = module,
                 IsFlags = (data.GetField("flags") as DBool).Value,
@@ -298,7 +321,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             string name = TypeUtil.GetName(fullName);
             if (string.IsNullOrWhiteSpace(fullName) || string.IsNullOrWhiteSpace(name))
             {
-                throw new Exception($"file:'{fileName}' 定义了一个空bean类名");
+                throw new LubanException("error.schema.empty_bean_name", fileName);
             }
             string module = TypeUtil.GetNamespace(fullName);
 
@@ -311,6 +334,7 @@ public class ExcelSchemaLoader : SchemaLoaderBase
             DList fields = data.GetField("fields") as DList;
             var curBean = new RawBean()
             {
+                Source = SchemaSource.FromPath(fileName),
                 Name = name,
                 Namespace = module,
                 IsValueType = ((DBool)data.GetField("valueType")).Value,

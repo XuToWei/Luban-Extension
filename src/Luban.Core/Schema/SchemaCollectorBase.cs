@@ -18,6 +18,7 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using Luban.Diagnostics;
 using Luban.RawDefs;
 
 namespace Luban.Schema;
@@ -35,11 +36,31 @@ public abstract class SchemaCollectorBase : ISchemaCollector
 
     private readonly Dictionary<string, string> _constAliases = new();
 
+    private Dictionary<string, string> _variants = new();
+
     protected List<RawTable> Tables => _tables;
+
+    protected IReadOnlyDictionary<string, string> Variants => _variants;
 
     public abstract void Load(LubanConfig config);
 
     public abstract RawAssembly CreateRawAssembly();
+
+    public virtual void SetVariants(Dictionary<string, string> variants)
+    {
+        _variants = variants ?? new Dictionary<string, string>();
+    }
+
+    /// <summary>
+    /// Resolve table variants in-place. Must be called after all tables are collected
+    /// and before readSchemaFromFile.
+    /// </summary>
+    protected void ResolveTableVariants()
+    {
+        var resolved = TableVariantResolver.Resolve(_tables, _variants);
+        _tables.Clear();
+        _tables.AddRange(resolved);
+    }
 
     protected RawAssembly CreateRawAssembly(LubanConfig config)
     {
@@ -93,7 +114,7 @@ public abstract class SchemaCollectorBase : ISchemaCollector
         {
             if (_constAliases.ContainsKey(name))
             {
-                s_logger.Warn("Duplicate const alias for '{}': '{}' and '{}'", name, _constAliases[name], alias);
+                s_logger.Warn(MessageCatalog.Format("warn.schema.duplicate_const_alias", name, _constAliases[name], alias));
             }
             _constAliases[name] = alias;
         }

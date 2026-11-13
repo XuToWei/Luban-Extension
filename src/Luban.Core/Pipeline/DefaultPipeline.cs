@@ -63,6 +63,7 @@ public class DefaultPipeline : IPipeline
         string schemaCollectorName = _args.SchemaCollector;
         s_logger.Info("load schema. collector: {}", schemaCollectorName);
         var schemaCollector = SchemaManager.Ins.CreateSchemaCollector(schemaCollectorName);
+        schemaCollector.SetVariants(_args.Variants);
         schemaCollector.Load(_config);
         _rawAssembly = schemaCollector.CreateRawAssembly();
     }
@@ -109,15 +110,15 @@ public class DefaultPipeline : IPipeline
     protected void ProcessTargets()
     {
         var tasks = new List<Task>();
-        tasks.Add(Task.Run(() =>
+        foreach (string target in _args.CodeTargets)
         {
-            foreach (string target in _args.CodeTargets)
+            string codeTargetName = target;
+            tasks.Add(Task.Run(() =>
             {
-                // code target doesn't support run in parallel
-                ICodeTarget m = CodeTargetManager.Ins.CreateCodeTarget(target);
-                ProcessCodeTarget(target, m);
-            }
-        }));
+                ICodeTarget m = CodeTargetManager.Ins.CreateCodeTarget(codeTargetName);
+                ProcessCodeTarget(codeTargetName, m);
+            }));
+        }
 
         if (_args.ForceLoadTableDatas || _args.DataTargets.Count > 0)
         {

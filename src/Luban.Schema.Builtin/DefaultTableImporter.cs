@@ -20,6 +20,7 @@
 
 using Luban.Defs;
 using Luban.RawDefs;
+using Luban.Schema;
 using Luban.Utils;
 using System.Text.RegularExpressions;
 
@@ -39,7 +40,7 @@ public class DefaultTableImporter : ITableImporter
         string tableNameFormatStr = EnvManager.Current.GetOptionOrDefault("tableImporter", "tableNameFormat", false, "Tb{0}");
         string valueTypeNameFormatStr = EnvManager.Current.GetOptionOrDefault("tableImporter", "valueTypeNameFormat", false, "{0}");
         var fileNamePattern = new Regex(fileNamePatternStr);
-        var excelExts = new HashSet<string> { "xlsx", "xls", "xlsm", "csv" };
+        var excelExts = new HashSet<string> { "xlsx", "xls", "xlsm", "csv", "tsv" };
 
         var tables = new List<RawTable>();
         foreach (string file in Directory.GetFiles(dataDir, "*", SearchOption.AllDirectories))
@@ -74,6 +75,7 @@ public class DefaultTableImporter : ITableImporter
             comment = comment != null && comment.Length >= 1 ? comment.TrimStart('-').Trim() : "";
             var table = new RawTable()
             {
+                Source = SchemaSource.Create(file),
                 Namespace = tableNamespace,
                 Name = tableName,
                 Index = "",
@@ -85,6 +87,7 @@ public class DefaultTableImporter : ITableImporter
                 InputFiles = new List<string> { relativePath },
                 OutputFile = "",
                 Tags = new Dictionary<string, string>(),
+                Variants = new List<string>(),
             };
             s_logger.Debug("import table file:{@}", table);
             tables.Add(table);

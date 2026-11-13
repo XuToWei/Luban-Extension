@@ -19,6 +19,7 @@
 // SOFTWARE.
 
 using Luban.DataLoader.Builtin.DataVisitors;
+using Luban.Diagnostics;
 using Luban.Datas;
 using Luban.Defs;
 using Luban.Types;
@@ -31,6 +32,7 @@ namespace Luban.DataLoader.Builtin.Excel;
 [DataLoader("xlsm")]
 [DataLoader("xlm")]
 [DataLoader("csv")]
+[DataLoader("tsv")]
 public class ExcelRowColumnDataSource : DataLoaderBase
 {
     private static readonly NLog.Logger s_logger = NLog.LogManager.GetCurrentClassLogger();
@@ -54,11 +56,11 @@ public class ExcelRowColumnDataSource : DataLoaderBase
         {
             if (!string.IsNullOrWhiteSpace(sheetName))
             {
-                throw new Exception($"excel:‘{rawUrl}’ sheet:‘{sheetName}’ 不存在或者不是有效的单元簿(有效单元薄的A0单元格必须是##)");
+                throw new LubanException("error.excel.sheet_not_found", rawUrl, sheetName);
             }
             else
             {
-                throw new Exception($"excel: ‘{rawUrl}’ 不包含有效的单元薄(有效单元薄的A0单元格必须是##).");
+                throw new LubanException("error.excel.no_valid_sheet", rawUrl);
             }
         }
     }
@@ -94,7 +96,7 @@ public class ExcelRowColumnDataSource : DataLoaderBase
             }
             catch (Exception e)
             {
-                throw new Exception($"sheet:{sheet.SheetName}", e);
+                throw new LubanException(e, "error.excel.sheet_error", sheet.SheetName);
             }
         }
         return datas;
@@ -102,6 +104,6 @@ public class ExcelRowColumnDataSource : DataLoaderBase
 
     public override Record ReadOne(TBean type)
     {
-        throw new Exception($"excel不支持单例读取模式");
+        throw new LubanException("error.excel.singleton_unsupported");
     }
 }

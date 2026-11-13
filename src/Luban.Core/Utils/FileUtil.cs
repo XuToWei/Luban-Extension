@@ -126,30 +126,31 @@ public static class FileUtil
     public static bool IsExcelFile(string fullName)
     {
         return fullName.EndsWith(".csv", StringComparison.Ordinal)
+               || fullName.EndsWith(".tsv", StringComparison.Ordinal)
                || fullName.EndsWith(".xls", StringComparison.Ordinal)
                || fullName.EndsWith(".xlsx", StringComparison.Ordinal)
                || fullName.EndsWith(".xlsm", StringComparison.Ordinal);
     }
 
+    /// <summary>
+    /// Parse <c>{sheet}@{path}</c>. The sheet segment must not contain path separators,
+    /// so absolute paths that happen to include <c>@</c> (e.g. Jenkins <c>job@2</c>) are left intact.
+    /// </summary>
     public static (string, string) SplitFileAndSheetName(string url)
     {
         int sheetSepIndex = url.IndexOf('@');
-        if (sheetSepIndex < 0)
+        if (sheetSepIndex <= 0)
         {
             return (url, null);
         }
-        else
+
+        string sheet = url[..sheetSepIndex];
+        if (sheet.Contains('/') || sheet.Contains('\\'))
         {
-            int lastPathSep = url.LastIndexOf('/', sheetSepIndex);
-            if (lastPathSep >= 0)
-            {
-                return (url[0..(lastPathSep + 1)] + url[(sheetSepIndex + 1)..], url[(lastPathSep + 1)..sheetSepIndex]);
-            }
-            else
-            {
-                return (url[(sheetSepIndex + 1)..], url[(lastPathSep + 1)..sheetSepIndex]);
-            }
+            return (url, null);
         }
+
+        return (url[(sheetSepIndex + 1)..], sheet);
     }
 
     public static async Task SaveFileAsync(string relateDir, string filePath, byte[] content)

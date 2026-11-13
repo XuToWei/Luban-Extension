@@ -18,6 +18,8 @@
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 // SOFTWARE.
 
+using Luban.Diagnostics;
+using Luban.Pipeline;
 using Scriban;
 using System.Collections.Concurrent;
 using System.Text;
@@ -28,7 +30,7 @@ public class TemplateManager
 {
     private static readonly NLog.Logger s_logger = NLog.LogManager.GetCurrentClassLogger();
 
-    public static TemplateManager Ins { get; } = new();
+    public static TemplateManager Ins => PipelineScope.Current.Templates;
 
 
     private readonly List<string> _templateSearchPaths = new();
@@ -39,6 +41,9 @@ public class TemplateManager
 
     public void Init()
     {
+        _templateSearchPaths.Clear();
+        _templates.Clear();
+        _templateStrings.Clear();
         string curDir = Path.GetDirectoryName(AppContext.BaseDirectory);
         AddTemplateSearchPath($"{curDir}/Templates", true);
     }
@@ -49,7 +54,7 @@ public class TemplateManager
         {
             if (sureExists)
             {
-                s_logger.Error("template search path:{} not exists", templateSearchPath);
+                s_logger.Error(MessageCatalog.Format("error.tmpl.search_path_not_exists", templateSearchPath));
             }
             return;
         }

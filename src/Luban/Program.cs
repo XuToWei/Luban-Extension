@@ -20,6 +20,7 @@
 
 using CommandLine;
 using Luban.DataLoader;
+using Luban.Diagnostics;
 using Luban.Pipeline;
 using Luban.Schema;
 using Luban.Tmpl;
@@ -62,7 +63,7 @@ internal static class Program
         [Option('e', "excludeTag", Required = false, HelpText = "exclude tag")]
         public IEnumerable<string> ExcludeTags { get; set; }
 
-        [Option("variant", Required = false, HelpText = "field variants")]
+        [Option("variant", Required = false, HelpText = "field/table variants")]
         public IEnumerable<string> Variants { get; set; }
 
         [Option('o', "outputTable", Required = false, HelpText = "output table")]
@@ -74,8 +75,14 @@ internal static class Program
         [Option("customTemplateDir", Required = false, HelpText = "custom template dirs")]
         public IEnumerable<string> CustomTemplateDirs { get; set; }
 
-        [Option("validationFailAsError", Required = false, HelpText = "validation fail as error")]
-        public bool ValidationFailAsError { get; set; }
+        [Option("strict", Required = false, HelpText = "treat validation failure as error")]
+        public bool Strict { get; set; }
+
+        [Option("locale", Required = false, HelpText = "locale for error/warning messages (en, zh). default: system UI language")]
+        public string Locale { get; set; }
+
+        [Option("errorFormat", Required = false, Default = "text", HelpText = "error output format: text|json (json is for AI/CI tooling)")]
+        public string ErrorFormat { get; set; } = "text";
 
         [Option('x', "xargs", Required = false, HelpText = "args like -x a=1 -x b=2")]
         public IEnumerable<string> Xargs { get; set; }
@@ -129,32 +136,81 @@ internal static class Program
         }
     }
 
+    private static bool UseJsonErrors(CommandOptions opts)
+        => string.Equals(opts.ErrorFormat, "json", StringComparison.OrdinalIgnoreCase);
+
+    private static void EmitErrorReport(DiagnosticReport report, CommandOptions opts)
+    {
+        if (UseJsonErrors(opts))
+        {
+            Console.Error.WriteLine(report.ToJson());
+            return;
+        }
+        foreach (var err in report.Errors)
+        {
+            s_logger.Error("[{}] {}{}", err.Category, err.Code != null ? err.Code + ": " : "", err.Message);
+            if (!string.IsNullOrEmpty(err.File))
+            {
+                s_logger.Error("  file: {}", err.File);
+            }
+            if (!string.IsNullOrEmpty(err.Location))
+            {
+                s_logger.Error("  location: {}", err.Location);
+            }
+            if (!string.IsNullOrEmpty(err.FieldPath))
+            {
+                s_logger.Error("  field: {}", err.FieldPath);
+            }
+        }
+    }
+
     private static void RunGeneration(CommandOptions opts, bool exitOnError)
     {
         try
         {
             IConfigLoader rootLoader = new GlobalConfigLoader();
             var config = rootLoader.Load(opts.ConfigFile);
-            GenerationContext.GlobalConf = config;
 
-
-            var launcher = new SimpleLauncher();
-            launcher.Start(ParseXargs(config.Xargs, opts.Xargs));
-            AddCustomTemplateDirs(opts.CustomTemplateDirs);
-
-            var pipeline = PipelineManager.Ins.CreatePipeline(opts.Pipeline);
-            pipeline.Run(CreatePipelineArgs(opts, config));
-            if (exitOnError && opts.ValidationFailAsError && GenerationContext.Current.AnyValidatorFail)
+            using var scope = PipelineScope.Create(ParseXargs(config.Xargs, opts.Xargs));
+            using (scope.Enter())
             {
-                s_logger.Error("encounter some validation failure. exit code: 1");
-                Environment.Exit(1);
+                scope.Config = config;
+                AddCustomTemplateDirs(opts.CustomTemplateDirs);
+
+                var pipeline = scope.Pipelines.CreatePipeline(opts.Pipeline);
+                scope.Pipeline = pipeline;
+                pipeline.Run(CreatePipelineArgs(opts, config));
+                if (exitOnError && opts.Strict && scope.GenerationContext.AnyValidatorFail)
+                {
+                    var report = DiagnosticReport.ValidationFailed();
+                    if (UseJsonErrors(opts))
+                    {
+                        EmitErrorReport(report, opts);
+                    }
+                    else
+                    {
+                        s_logger.Error(MessageCatalog.Format("error.cli.validation_fail"));
+                    }
+                    Environment.Exit(1);
+                }
+                if (UseJsonErrors(opts) && exitOnError)
+                {
+                    Console.Error.WriteLine(DiagnosticReport.Success().ToJson());
+                }
+                s_logger.Info("bye~");
             }
-            s_logger.Info("bye~");
         }
         catch (Exception e)
         {
-            PrettyPrintException(e);
-            s_logger.Error("run failed!!!");
+            if (UseJsonErrors(opts))
+            {
+                EmitErrorReport(DiagnosticReport.FromException(e), opts);
+            }
+            else
+            {
+                PrettyPrintException(e);
+                s_logger.Error(MessageCatalog.Format("error.cli.run_failed"));
+            }
             if (exitOnError)
             {
                 Environment.Exit(1);
@@ -163,24 +219,35 @@ internal static class Program
     }
 
     private static void PrettyPrintException(Exception e)
-    {
-        if (TryExtractDataCreateException(e, out var dce))
         {
-            s_logger.Error($"=======================================================================");
-            s_logger.Error("解析失败!");
-            s_logger.Error($"文件:        {dce.OriginDataLocation}");
-            s_logger.Error($"错误位置:    {dce.DataLocationInFile}");
-            s_logger.Error($"Err:         {dce.OriginErrorMsg}");
-            s_logger.Error($"字段:        {dce.VariableFullPathStr}");
-            s_logger.Error($"=======================================================================");
-            return;
+            if (TryExtractDataCreateException(e, out var dce))
+            {
+                s_logger.Error("=======================================================================");
+                s_logger.Error(MessageCatalog.Format("error.data.parse_failed"));
+                s_logger.Error(MessageCatalog.Format("error.data.parse_file", dce.OriginDataLocation));
+                s_logger.Error(MessageCatalog.Format("error.data.parse_location", dce.DataLocationInFile));
+                s_logger.Error(MessageCatalog.Format("error.data.parse_err", dce.OriginErrorMsg));
+                s_logger.Error(MessageCatalog.Format("error.data.parse_field", dce.VariableFullPathStr));
+                s_logger.Error("=======================================================================");
+                return;
+            }
+            do
+            {
+                s_logger.Error("===> {}", e.Message);
+                if (e is LubanException { SchemaOrigin: not null } le)
+                {
+                    if (!string.IsNullOrEmpty(le.SchemaOrigin.File))
+                    {
+                        s_logger.Error("  file: {}", le.SchemaOrigin.File);
+                    }
+                    if (!string.IsNullOrEmpty(le.SchemaOrigin.Sheet))
+                    {
+                        s_logger.Error("  sheet: {}", le.SchemaOrigin.Sheet);
+                    }
+                }
+                e = e.InnerException;
+            } while (e != null);
         }
-        do
-        {
-            s_logger.Error("===> {}", e.Message);
-            e = e.InnerException;
-        } while (e != null);
-    }
 
     private static bool TryExtractDataCreateException(Exception e, out DataCreateException extract)
     {
@@ -251,12 +318,12 @@ internal static class Program
             string[] pair = arg.Split('=', 2);
             if (pair.Length != 2)
             {
-                throw new Exception($"invalid xargs:{arg}");
+                throw new LubanException("error.cli.invalid_xargs", arg);
             }
 
             if (!result.TryAdd(pair[0], pair[1]))
             {
-                throw new Exception($"duplicate xargs:{arg}");
+                throw new LubanException("error.cli.duplicate_xargs", arg);
             }
         }
         return result;
@@ -285,12 +352,12 @@ internal static class Program
             string[] pair = variant.Split('=', 2);
             if (pair.Length != 2)
             {
-                throw new Exception($"invalid variant:{variant}");
+                throw new LubanException("error.cli.invalid_variant", variant);
             }
 
             if (!result.TryAdd(pair[0], pair[1]))
             {
-                throw new Exception($"duplicate variant:{variant}");
+                throw new LubanException("error.cli.duplicate_variant", variant);
             }
         }
         return result;
@@ -326,6 +393,7 @@ internal static class Program
 
         NLog.LogManager.Setup().LoadConfigurationFromFile(opts.LogConfig);
         s_logger = LogManager.GetCurrentClassLogger();
+        MessageCatalog.Init(opts.Locale);
         PrintCopyRight();
     }
 
@@ -334,6 +402,8 @@ internal static class Program
         s_logger.Info(" ==========================================================================================");
         s_logger.Info("");
         s_logger.Info("  Luban is developed by Code Philosophy Technology Co., LTD. https://code-philosophy.com");
+        s_logger.Info("  Github: https://github.com/focus-creative-games/luban");
+        s_logger.Info("  Document: https://www.datable.cn");
         s_logger.Info("");
         s_logger.Info(" ==========================================================================================");
     }
