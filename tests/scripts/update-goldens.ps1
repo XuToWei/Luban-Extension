@@ -7,7 +7,7 @@ $repoRoot = Resolve-Path (Join-Path $PSScriptRoot "..\..")
 Set-Location (Join-Path $repoRoot "src")
 
 dotnet build Luban\Luban.csproj -c Release | Out-Host
-$luban = Join-Path $repoRoot "src\Luban\bin\Release\net8.0\Luban.dll"
+$luban = Join-Path $repoRoot "src\Luban\bin\Release\net10.0\Luban.dll"
 $fixtures = Join-Path $repoRoot "tests\fixtures"
 $golden = Join-Path $repoRoot "tests\golden"
 

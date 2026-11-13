@@ -32,7 +32,8 @@
 
     <ItemGroup>
       <PackageReference Include="ExcelDataReader" Version="3.8.0" />
-      <PackageReference Include="NeoLua" Version="1.3.14" />
+      <!-- Includes the .NET 10 LuaType initialization fix (neolithos/neolua#195). -->
+      <PackageReference Include="NeoLua" Version="1.3.20-beta.1" />
       <PackageReference Include="Ude.NetStandard" Version="1.2.0" />
       <PackageReference Include="YamlDotNet.NetCore" Version="1.0.0" />
     </ItemGroup>

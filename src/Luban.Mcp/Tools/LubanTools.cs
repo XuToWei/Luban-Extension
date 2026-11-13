@@ -229,8 +229,8 @@ public static class LubanTools
         }
         var candidates = new[]
         {
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Luban.Agent", "bin", "Release", "net8.0", "Luban.Agent.dll")),
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Luban.Agent", "bin", "Debug", "net8.0", "Luban.Agent.dll")),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Luban.Agent", "bin", "Release", "net10.0", "Luban.Agent.dll")),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Luban.Agent", "bin", "Debug", "net10.0", "Luban.Agent.dll")),
         };
         return candidates.FirstOrDefault(File.Exists);
     }
@@ -248,8 +248,8 @@ public static class LubanTools
         }
         var candidates = new[]
         {
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Luban", "bin", "Release", "net8.0", "Luban.dll")),
-            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Luban", "bin", "Debug", "net8.0", "Luban.dll")),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Luban", "bin", "Release", "net10.0", "Luban.dll")),
+            Path.GetFullPath(Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "..", "Luban", "bin", "Debug", "net10.0", "Luban.dll")),
         };
         return candidates.FirstOrDefault(File.Exists);
     }

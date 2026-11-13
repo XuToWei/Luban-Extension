@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT/src"
 dotnet build Luban/Luban.csproj -c Release
-LUBAN="$ROOT/src/Luban/bin/Release/net8.0/Luban.dll"
+LUBAN="$ROOT/src/Luban/bin/Release/net10.0/Luban.dll"
 FIXTURES="$ROOT/tests/fixtures"
 GOLDEN="$ROOT/tests/golden"
 
